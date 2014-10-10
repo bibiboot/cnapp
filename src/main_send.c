@@ -80,7 +80,7 @@ void create_socket_address(struct sockaddr_ll *socket_address, int src_index, ui
     //memcpy(socket_address->sll_addr, dest_mac, ETH_ALEN);
 }
 
-void create_packet(void *packet, uint32_t src_mac, uint32_t dest_mac)
+int create_packet(void *packet, uint32_t src_mac, uint32_t dest_mac)
 {
     /*userdata in ethernet frame*/
     unsigned char* data = packet + 8;
@@ -90,13 +90,14 @@ void create_packet(void *packet, uint32_t src_mac, uint32_t dest_mac)
     memcpy((void*)(packet+4), (void*)&src_mac, 4);
 
     memcpy((void*)(packet+8), "RAT", 4);
+    return 4;
 
     /*
     int j;
-    for (j = 0; j < 4; j++)
+    for (j = 0; j < 1500; j++)
         data[j] = (unsigned char)(5);
     data[j] = '\0';
-    /(int *)data = htonl(10);
+    return 1500;
     */
 }
 
@@ -124,13 +125,13 @@ void send_packet() {
     void* packet = (void*)malloc(PACKET_SIZE1);
 
     /*Create packet*/
-    create_packet(packet, src_mac, dest_mac);
-    printf("Packet created\n");
+    int payload_size = create_packet(packet, src_mac, dest_mac);
 
     /*send the packet*/
-    int send_result = 0;
-    printf("Send to\n");
-    send_result = sendto(s, packet, PACKET_SIZE1 , 0, (struct sockaddr*)&socket_address, sizeof(socket_address));
+    int header_size = 8;
+    int send_result = sendto(s, packet, header_size + payload_size ,
+                             0, (struct sockaddr*)&socket_address,
+                             sizeof(socket_address));
     if (send_result < 0){
 	printf("ERROR: sendto\n");
 	perror("sendto");
@@ -146,12 +147,5 @@ int main(int argc, char *argv[]){
 
     send_packet();
 
-    printf("SUCCESS\n");
     return 0;
-}
-
-void start(){
-    //void *val;
-    //pthread_create(&globals.sen_th, 0, reciever, val);
-    //pthread_create(&globals.rev_th, 0, sender, val);
 }
