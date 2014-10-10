@@ -1,4 +1,5 @@
 #include "globals.h"
+#include "cprotocol.h"
 
 #include <sys/socket.h>
 #include <linux/if_packet.h>
@@ -12,11 +13,6 @@
 #include <sys/ioctl.h>
 
 #define PACKET_SIZE1 12
-
-struct data {
-    uint32_t dest_mac;
-    uint32_t src_mac;
-};
 
 int interface_addr(int sock, char *ifname, unsigned char *addr)
 {
@@ -80,7 +76,26 @@ void create_socket_address(struct sockaddr_ll *socket_address, int src_index, ui
     //memcpy(socket_address->sll_addr, dest_mac, ETH_ALEN);
 }
 
-int create_packet(void *packet, uint32_t src_mac, uint32_t dest_mac)
+int create_packet(void *packet)
+{
+    /*userdata in ethernet frame*/
+    int header_size = sizeof(struct custom_ethernet) + sizeof(struct custom_ip) + sizeof(struct custom_udp);
+    unsigned char* data = packet + header_size;
+
+    struct custom_ethernet *eth_header = (struct custom_ethernet*)packet;
+    struct custom_ip *ip_header = (struct custom_ip*)(packet + sizeof(struct custom_ethernet));
+    struct custom_udp *udp_header = (struct custom_udp*)(packet + sizeof(struct custom_ethernet) + sizeof(struct custom_ip));
+
+    eth_header->dest_mac = htons(ROUTER_MAC);
+    ip_header->src_ip = htons(NODE1_IP);
+    ip_header->dest_ip = htons(NODE2_IP);
+    udp_header->port = htons(DATA_PORT);
+
+    memcpy((void*)(packet+header_size), "RAT", 4);
+    return 4;
+}
+
+int create_packet_back(void *packet, uint32_t src_mac, uint32_t dest_mac)
 {
     /*userdata in ethernet frame*/
     unsigned char* data = packet + 8;
@@ -110,7 +125,6 @@ void send_packet() {
 
     /*other host MAC address*/
     uint32_t dest_mac= htons(1);
-    uint32_t src_mac = htons(2);
 
     /*Create raw socket*/
     s = get_socket();
@@ -125,10 +139,11 @@ void send_packet() {
     void* packet = (void*)malloc(PACKET_SIZE1);
 
     /*Create packet*/
-    int payload_size = create_packet(packet, src_mac, dest_mac);
+    int payload_size = create_packet(packet);
 
     /*send the packet*/
-    int header_size = 8;
+    //int header_size = 8;
+    int header_size = sizeof(struct custom_ethernet) + sizeof(struct custom_ip) + sizeof(struct custom_udp);
     int send_result = sendto(s, packet, header_size + payload_size ,
                              0, (struct sockaddr*)&socket_address,
                              sizeof(socket_address));
