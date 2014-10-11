@@ -12,7 +12,12 @@
 #define NODE3_IP 3
 
 #define DATA_PORT 0
-#define DATA_NACK 1
+#define NACK_PORT 1
+
+#define C_ETHLEN sizeof(struct custom_ethernet)
+#define C_IPLEN sizeof(struct custom_ip)
+#define C_UDPLEN sizeof(struct custom_udp)
+#define C_HLEN C_ETHLEN + C_IPLEN + C_UDPLEN
 
 struct data {
     uint32_t dest_mac;
@@ -20,7 +25,7 @@ struct data {
 };
 
 struct pattern {
-    uint64_t pttn;
+    uint64_t value;
 };
 
 struct custom_ethernet {

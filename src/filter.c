@@ -20,30 +20,11 @@
 #include<sys/types.h>
 #include<unistd.h>
 
-/**
- * Allow a packet to be sniffed or not.
- * First filter to incoming packet.
- * TCP = 6 | ICMP = 1 | UDP = 17
- */
-bool is_allowed(unsigned char *packet, int data_size)
+bool is_allowed(unsigned char *packet)
 {
-    struct sockaddr_in source, dest;
-    struct ethhdr *eth = (struct ethhdr *)packet;
-    struct iphdr *iph = (struct iphdr*)(packet + sizeof(struct ethhdr));
-
-    /* Get src and dest ip of the incoming packet */
-    memset(&source, 0, sizeof(source));
-    source.sin_addr.s_addr = iph->saddr;
-
-    memset(&dest, 0, sizeof(dest));
-    dest.sin_addr.s_addr = iph->daddr;
-
-    /*
-     * Only allow TCP or UDP or ICMP , and matches the given
-     * interface MAC address
-     */
-    if (iph->protocol ==  17 || iph->protocol == 1 || iph->protocol == 6) {
+    struct custom_ethernet *eth_header = (struct custom_ethernet*)packet;
+    if (ntohs(eth_header->dest_mac) == globals.src_node)
         return true;
-    }
     return false;
 }
+

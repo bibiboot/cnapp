@@ -1,5 +1,16 @@
 #include "socket_addr_create.h"
 
+void create_custom_socket_address(struct sockaddr_ll *socket_address,
+                                  int src_index){
+    socket_address->sll_family   = PF_PACKET;
+    //socket_address->sll_protocol = htons(ETH_P_IP);
+    socket_address->sll_ifindex  = src_index;
+    //socket_address->sll_hatype   = ARPHRD_ETHER;
+    socket_address->sll_pkttype  = PACKET_OTHERHOST;
+    socket_address->sll_halen = ETH_ALEN;
+    //memcpy(socket_address->sll_addr, dest_mac, ETH_ALEN);
+}
+
 void create_socket_address(struct sockaddr_ll *socket_address, int src_index, unsigned char *dest_mac){
     /*prepare sockaddr_ll*/
     /*RAW communication*/

@@ -10,12 +10,16 @@
 #include <pthread.h>
 
 #include "config.h"
+#include "cprotocol.h"
+#include "color.h"
 
 #define PACKET_SIZE 65536
 // Print function name, filename and line number in print
 #define DBG(...) do{fprintf(stderr, "%s (%s, line %d): ", __func__, __FILE__, __LINE__); \
                          fprintf(stderr, __VA_ARGS__);           \
                          fprintf(stderr, "\n");} while(0)
+
+#define INF0 "eth0"
 
 #define MULTICAST_IP "224.0.0.9"
 
@@ -33,6 +37,9 @@
 FILE *LOGFILE;
 
 struct globals {
+    int send_sock_fd;
+    uint16_t src_node, dest_node;
+    pthread_t sniff_th, sender_th;
     struct config config;
 };
 
