@@ -1,6 +1,8 @@
 #include "globals.h"
 #include "packet_sniffer.h"
 
+#define MAX_SEND 1000
+
 void *sender(void *val)
 {
     int payload_size = 4;
@@ -12,7 +14,10 @@ void *sender(void *val)
     create_packet(packet, globals.dest_node, DATA_PORT, payload, payload_size);
     int packet_size = payload_size + C_HLEN;
 
-    send_packet_on_line("eth0", packet, packet_size);
+    int i;
+    for (i=0; i<=MAX_SEND; i++) {
+        send_packet_on_line("eth0", packet, packet_size);
+    }
 }
 
 void start(){
